@@ -1,73 +1,83 @@
-# React + TypeScript + Vite
+# File Format DB Viewer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Browser-based parquet inspection with DuckDB WASM, React, and Vite.
 
-Currently, two official plugins are available:
+## What It Does
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Uploads a local parquet file without sending data to a backend
+- Validates parquet header and footer magic bytes
+- Registers the uploaded file as `active_db` for DuckDB SQL queries
+- Browses rows with pagination
+- Opens full row details in a modal for long strings, arrays, and structs
+- Shows a schema sidebar for the active parquet dataset
+- Supports light and dark themes
 
-## React Compiler
+## Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS 4
+- DuckDB WASM
+- Apache Arrow
+- Husky
+- Prettier
 
-## Expanding the ESLint configuration
+## Query Model
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+After upload, the parquet file is exposed in DuckDB as:
 
-```js
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sql
+SELECT * FROM active_db
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+This keeps the SQL editor stable instead of referencing a generated upload filename.
 
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x"
-import reactDom from "eslint-plugin-react-dom"
+## Development
 
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Install dependencies:
+
+```bash
+npm install
 ```
+
+Start the dev server:
+
+```bash
+npm run dev
+```
+
+## Scripts
+
+- `npm run dev` starts Vite in development mode
+- `npm run build` creates a production build in `build/`
+- `npm run preview` previews the production build
+- `npm run lint` runs ESLint
+- `npm run format` runs Prettier with `--write`
+- `npm run format:check` checks formatting without writing changes
+
+## Git Hooks
+
+Husky is configured with:
+
+- `pre-commit`: `npm run format`
+- `post-commit`: `npm run build`
+
+## Build Output
+
+Production output is written to:
+
+```text
+build/
+```
+
+The main entry file for static hosting is:
+
+```text
+build/index.html
+```
+
+## Notes
+
+- DuckDB worker files are served from `public/duckdb-workers`
+- Generated assets and worker bundles are ignored by Prettier via `.prettierignore`
